@@ -10,14 +10,14 @@ set -f
 find $where -type f  \( $tmp \) -print \
 	| while read line; do
 		echo -n "$line... "
-		if [ -f "$line.md5" ]; then
+		hashfile="$line.md5"
+		if [ -f "$hashfile" ]; then
 			echo skipped
 		else
-			trap "rm \"$line.md5\"" 0
-			touch "$line.md5"
-			md5sum < "$line" | cut -d" " -f 1 >  "$line.md5"
+			trap "rm \"$hashfile\"" 0
+			touch "$hashfile"
+			md5sum < "$line" | cut -d" " -f 1 >  "$hashfile"
 			trap - 0
-			cat "$line.md5"
+			cat "$hashfile"
 		fi
 	done
-
