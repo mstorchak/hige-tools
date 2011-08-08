@@ -16,7 +16,7 @@ find $where -type f  \( $tmp \) -print \
 		else
 			trap "rm \"$hashfile\"" 0
 			touch "$hashfile"
-			md5sum < "$line" | cut -d" " -f 1 >  "$hashfile"
+			md5sum < "$line" | cut -d" " -f 1 > "$hashfile"
 			trap - 0
 			cat "$hashfile"
 		fi
