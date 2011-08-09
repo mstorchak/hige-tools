@@ -1,0 +1,52 @@
+#!/bin/bash
+suffix=".md5"
+
+#context=$(basename $0 .sh)
+#tmp=$(mktemp -d /dev/shm/$context.XXXXXX)
+#trap "rm -rf $tmp" 0
+
+# подсказака, как запускать
+function usage () {
+    echo "$0 [-l]"
+    exit 0
+}
+
+# если первая опция -l - то линкать, иначе выводить имена через таб
+[ "$1" == "-l" ] && cmd="ln -vf" || cmd="printf %s\t%s\n"
+
+exec >linked_ok.log 2>linked_err.log 3>linked_imp.log
+
+# найти все файлы с хешами
+find . -type f -name "*$suffix" \
+    | while read hashfile; do
+        # откусить суффикс
+        file=$(sed -e "s/\\$suffix\$//" <<<"$hashfile")
+        # если файл не существует или это не файл (ВНЕЗАПНО), залогать ошибки и ехать дальше
+        [ -f "$file" ] || { echo "Hashfile found, but no file: $hashfile" >&2; continue; }
+        # вчитать хеш, попутно отгрызая все после пробела, если что-то есть
+        hash=$(sed -e 's/ .*//' < "$hashfile")
+        # узнать устройство и размер файла
+        size_device=$(stat -c "%s 0x%D" "$file")
+        # если вдруг что-то не сложилось и получили пустые строки - едем дальше, хотя можно и залогать ошибку, см. выше
+        [ "$hash" ] || continue
+        [ "$size_device" ] || continue
+        # напечатали заготовку
+        echo "$hash $size_device $file"
+    # сортируем. все, что одинаковое, теперь идет вместе
+    done | sort \
+    | while read hash size device file; do
+        if [ "$device-$size-$hash" == "$prev_device-$prev_size-$prev_hash" ]; then
+            # если все совпало...
+            $cmd "$prev_file" "$file"
+        elif [ "$hash" == "$prev_hash" ]; then
+            # если совпал только хеш...
+            msg=""
+            [ "$device" == "$prev_device" ] && msg="$msg device:same" || msg="$msg device:diff"
+            [ "$size" == "$prev_size" ] && msg="$msg size:same" || msg="$msg size:diff"
+            printf "%s\t%s\t%s\n" "$msg" "$prev_file" "$file" >&3
+        fi
+        prev_device="$device"
+        prev_file="$file"
+        prev_size="$size"
+        prev_hash="$hash"
+    done
