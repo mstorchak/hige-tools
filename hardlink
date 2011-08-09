@@ -10,6 +10,7 @@ function usage () {
 # если первая опция -l - то линкать, иначе выводить имена через таб
 [ "$1" == "-l" ] && cmd="ln -vf" || cmd="printf %s\t%s\n"
 
+# перенаправлениe потоков вывода
 exec >linked_ok.log 2>linked_err.log 3>linked_imp.log
 
 # найти все файлы с хешами
