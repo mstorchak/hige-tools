@@ -1,0 +1,20 @@
+#!/bin/bash
+ext_list="avi mkv ogm mp4 wmv"
+tmp=""
+for i in $ext_list; do
+    tmp="$tmp -iname *.$i -o"
+done
+tmp=$(sed -e 's/ -o$//'<<<$tmp)
+set -f
+#echo $tmp
+find ./ -type f  \( $tmp \) -print \
+    | while read line; do
+        echo -n "$line... "
+        if [ -f "$line.md5" ]; then
+            echo skipped
+        else
+            md5sum < "$line" | cut -d" " -f 1 >  "$line.md5"
+            cat "$line.md5"
+        fi
+    done
+
