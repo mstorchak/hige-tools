@@ -1,10 +1,6 @@
 #!/bin/bash
 suffix=".md5"
 
-#context=$(basename $0 .sh)
-#tmp=$(mktemp -d /dev/shm/$context.XXXXXX)
-#trap "rm -rf $tmp" 0
-
 # подсказака, как запускать
 function usage () {
     echo "$0 [-l]"
